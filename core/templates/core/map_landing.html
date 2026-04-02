@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Delivery - Landing</title>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --text: #1f2937;
+            --accent: #0b4f6c;
+            --card: #ffffff;
+            --muted: #cbd5e1;
+            --button: #0b5ed7;
+            --button-hover: #0a53be;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        header {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .brand-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .brand-line {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .house-logo {
+            width: 34px;
+            height: 34px;
+            color: var(--accent);
+        }
+
+        .logo-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .languages {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .languages button {
+            border: 1px solid var(--muted);
+            border-radius: 999px;
+            background: #fff;
+            padding: 0.28rem 0.7rem;
+            cursor: pointer;
+            font-size: 0.86rem;
+        }
+
+        .top-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.35rem;
+        }
+
+        .top-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .top-links a:hover,
+        .languages button:hover {
+            color: var(--accent);
+        }
+
+        .map-card {
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            padding: 0.9rem;
+        }
+
+        .map-title {
+            margin: 0 0 0.7rem;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .map-area {
+            position: relative;
+            min-height: 60vh;
+            border-radius: 12px;
+            border: 1px solid #94a3b8;
+            overflow: hidden;
+            background:
+                linear-gradient(115deg, rgba(2, 132, 199, 0.1), rgba(56, 189, 248, 0.06)),
+                linear-gradient(25deg, rgba(20, 184, 166, 0.08), rgba(34, 197, 94, 0.05)),
+                #e2e8f0;
+        }
+
+        .map-roads {
+            position: absolute;
+            inset: 0;
+            background:
+                repeating-linear-gradient(35deg, rgba(100, 116, 139, 0.35) 0 2px, transparent 2px 48px),
+                repeating-linear-gradient(130deg, rgba(100, 116, 139, 0.22) 0 2px, transparent 2px 60px);
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        .district-label {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(255, 255, 255, 0.88);
+            border-radius: 8px;
+            padding: 0.35rem 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .pin {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .pin::after {
+            content: "";
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.85);
+            top: 3px;
+            left: 3px;
+        }
+
+        .red { background: #ef4444; }
+        .yellow { background: #eab308; }
+        .blue { background: #3b82f6; }
+        .green { background: #22c55e; }
+        .orange { background: #f97316; }
+
+        #current-location-dot {
+            position: absolute;
+            top: 54%;
+            left: 52%;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #2563eb;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
+            cursor: grab;
+            touch-action: none;
+        }
+
+        #current-location-dot:active {
+            cursor: grabbing;
+        }
+
+        .legend {
+            margin-top: 0.8rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+            gap: 0.45rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: #f8fafc;
+            border: 1px solid #dbe2ea;
+            border-radius: 10px;
+            padding: 0.35rem 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .legend-red { background: #ef4444; }
+        .legend-yellow { background: #eab308; }
+        .legend-blue { background: #3b82f6; }
+        .legend-green { background: #22c55e; }
+        .legend-orange { background: #f97316; }
+        .legend-current {
+            background: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+        }
+
+        .map-note {
+            margin-top: 0.55rem;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+
+        .report-button {
+            display: block;
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+            background: var(--button);
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            transition: background 0.2s ease;
+        }
+
+        .report-button:hover {
+            background: var(--button-hover);
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <header>
+            <div class="brand-wrap">
+                <div class="brand-line">
+                    <svg class="house-logo" viewBox="0 0 24 24" fill="none" aria-label="House logo">
+                        <path d="M3 10.8L12 3l9 7.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M5.5 9.8V20h13V9.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 20v-5.5h4V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <div class="logo-text">Digital Service Delivery Concierge</div>
+                </div>
+                <div class="languages" aria-label="Language toggle">
+                    <button type="button">English</button>
+                    <button type="button">Zulu</button>
+                    <button type="button">Afrikaans</button>
+                </div>
+            </div>
+            <div class="top-links">
+                <a href="#">About Us</a>
+                <a href="#">Contact Us</a>
+            </div>
+        </header>
+
+        <section class="map-card" aria-label="Kimberley map mock">
+            <h2 class="map-title">Kimberley Map (Mock Incidents)</h2>
+            <div id="map-area" class="map-area">
+                <div class="map-roads"></div>
+                <div class="district-label">Kimberley CBD</div>
+
+                <span class="pin red" style="top: 22%; left: 17%;" title="Pothole"></span>
+                <span class="pin yellow" style="top: 34%; left: 37%;" title="Electricity"></span>
+                <span class="pin blue" style="top: 50%; left: 66%;" title="Water"></span>
+                <span class="pin green" style="top: 68%; left: 22%;" title="Traffic"></span>
+                <span class="pin orange" style="top: 43%; left: 82%;" title="Streetlight"></span>
+                <span class="pin red" style="top: 79%; left: 58%;" title="Pothole"></span>
+                <span class="pin yellow" style="top: 27%; left: 74%;" title="Electricity"></span>
+
+                <span id="current-location-dot" title="Current Location (drag me)"></span>
+            </div>
+
+            <div class="legend" aria-label="Color guide">
+                <div class="legend-item"><span class="legend-dot legend-red"></span> Red pin = Pothole</div>
+                <div class="legend-item"><span class="legend-dot legend-yellow"></span> Yellow pin = Electricity</div>
+                <div class="legend-item"><span class="legend-dot legend-blue"></span> Blue pin = Water</div>
+                <div class="legend-item"><span class="legend-dot legend-green"></span> Green pin = Traffic</div>
+                <div class="legend-item"><span class="legend-dot legend-orange"></span> Orange pin = Streetlight</div>
+                <div class="legend-item"><span class="legend-dot legend-current"></span> Blue dot = Current location</div>
+            </div>
+            <p class="map-note">Tip: drag and drop the blue dot to simulate your location.</p>
+        </section>
+
+        <a class="report-button" href="{% url 'report_fault' %}">Report a Fault</a>
+    </main>
+    <script>
+        (function () {
+            const dot = document.getElementById("current-location-dot");
+            const map = document.getElementById("map-area");
+            let dragging = false;
+
+            const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+            function moveDot(clientX, clientY) {
+                const rect = map.getBoundingClientRect();
+                const x = clamp(clientX - rect.left, 8, rect.width - 8);
+                const y = clamp(clientY - rect.top, 8, rect.height - 8);
+                dot.style.left = `${(x / rect.width) * 100}%`;
+                dot.style.top = `${(y / rect.height) * 100}%`;
+            }
+
+            dot.addEventListener("pointerdown", (event) => {
+                dragging = true;
+                dot.setPointerCapture(event.pointerId);
+            });
+
+            dot.addEventListener("pointermove", (event) => {
+                if (!dragging) return;
+                moveDot(event.clientX, event.clientY);
+            });
+
+            dot.addEventListener("pointerup", () => {
+                dragging = false;
+            });
+        })();
+    </script>
+</body>
+</html>
