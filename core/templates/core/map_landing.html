@@ -157,49 +157,98 @@
             color: #334155;
         }
 
+        /* Pins: colour + letter + shape/border so types work without relying on colour alone */
         .pin {
             position: absolute;
-            width: 14px;
-            height: 14px;
+            width: 22px;
+            height: 22px;
+            display: grid;
+            place-items: center;
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+            border: 2px solid #0f172a;
+        }
+
+        .pin-pothole {
+            border-radius: 4px;
+            transform: rotate(45deg);
+            background: #ef4444;
+        }
+
+        .pin-pothole .pin-label {
+            transform: rotate(-45deg);
+        }
+
+        .pin-electricity {
+            border-radius: 50%;
+            border-style: dashed;
+            background: #eab308;
+        }
+
+        .pin-water {
+            border-radius: 0;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            background: #3b82f6;
+        }
+
+        .pin-traffic {
+            border-radius: 4px;
+            border-style: double;
+            border-width: 3px;
+            background: #22c55e;
+        }
+
+        .pin-streetlight {
             border-radius: 50% 50% 50% 0;
             transform: rotate(-45deg);
-            border: 1px solid rgba(0, 0, 0, 0.2);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            background: #f97316;
         }
 
-        .pin::after {
-            content: "";
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.85);
-            top: 3px;
-            left: 3px;
+        .pin-streetlight .pin-label {
+            transform: rotate(45deg);
         }
 
-        .red { background: #ef4444; }
-        .yellow { background: #eab308; }
-        .blue { background: #3b82f6; }
-        .green { background: #22c55e; }
-        .orange { background: #f97316; }
+        .pin-label {
+            line-height: 1;
+            pointer-events: none;
+        }
 
         #current-location-dot {
             position: absolute;
             top: 54%;
             left: 52%;
-            width: 16px;
-            height: 16px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             background: #2563eb;
-            border: 2px solid #ffffff;
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
+            border: 3px solid #ffffff;
+            box-shadow: 0 0 0 2px #0f172a, 0 0 0 5px rgba(37, 99, 235, 0.25);
             cursor: grab;
             touch-action: none;
+            display: grid;
+            place-items: center;
+            font-size: 0.55rem;
+            font-weight: 800;
+            color: #fff;
         }
 
         #current-location-dot:active {
             cursor: grabbing;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
 
         .legend {
@@ -217,24 +266,73 @@
             border: 1px solid #dbe2ea;
             border-radius: 10px;
             padding: 0.25rem 0.45rem;
-            font-size: 0.8rem;
+            font-size: 0.76rem;
         }
 
-        .legend-dot {
-            width: 12px;
-            height: 12px;
+        .legend-sample {
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            display: grid;
+            place-items: center;
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+            border: 2px solid #0f172a;
+        }
+
+        .legend-sample.legend-pothole {
+            border-radius: 4px;
+            transform: rotate(45deg);
+            background: #ef4444;
+        }
+
+        .legend-sample.legend-pothole span {
+            transform: rotate(-45deg);
+            display: block;
+        }
+
+        .legend-sample.legend-electricity {
             border-radius: 50%;
-            display: inline-block;
+            border-style: dashed;
+            background: #eab308;
         }
 
-        .legend-red { background: #ef4444; }
-        .legend-yellow { background: #eab308; }
-        .legend-blue { background: #3b82f6; }
-        .legend-green { background: #22c55e; }
-        .legend-orange { background: #f97316; }
-        .legend-current {
+        .legend-sample.legend-water {
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            background: #3b82f6;
+        }
+
+        .legend-sample.legend-traffic {
+            border-radius: 4px;
+            border-style: double;
+            border-width: 3px;
+            background: #22c55e;
+        }
+
+        .legend-sample.legend-streetlight {
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            background: #f97316;
+        }
+
+        .legend-sample.legend-streetlight span {
+            transform: rotate(45deg);
+            display: block;
+        }
+
+        .legend-sample.legend-current {
+            border-radius: 50%;
             background: #2563eb;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 2px #0f172a;
+            font-size: 0.5rem;
+        }
+
+        .legend-key {
+            font-weight: 700;
+            color: #0f172a;
         }
 
         .map-note {
@@ -288,30 +386,31 @@
 
         <section class="map-card" aria-label="Kimberley map mock">
             <h2 class="map-title">Kimberley Map (Mock Incidents)</h2>
-            <div id="map-area" class="map-area">
+            <p class="map-note" style="margin: 0 0 0.4rem;">Each incident uses a <strong>letter code</strong> and a <strong>distinct shape</strong>, not colour alone—so the map stays usable if you see colours differently.</p>
+            <div id="map-area" class="map-area" role="img" aria-label="Mock map of Kimberley with labelled incident markers P, E, W, T, S and your location">
                 <div class="map-roads"></div>
                 <div class="district-label">Kimberley CBD</div>
 
-                <span class="pin red" style="top: 22%; left: 17%;" title="Pothole"></span>
-                <span class="pin yellow" style="top: 34%; left: 37%;" title="Electricity"></span>
-                <span class="pin blue" style="top: 50%; left: 66%;" title="Water"></span>
-                <span class="pin green" style="top: 68%; left: 22%;" title="Traffic"></span>
-                <span class="pin orange" style="top: 43%; left: 82%;" title="Streetlight"></span>
-                <span class="pin red" style="top: 79%; left: 58%;" title="Pothole"></span>
-                <span class="pin yellow" style="top: 27%; left: 74%;" title="Electricity"></span>
+                <span class="pin pin-pothole" style="top: 22%; left: 17%;" title="Pothole — marker P, square rotated"><span class="pin-label">P</span><span class="sr-only">Pothole</span></span>
+                <span class="pin pin-electricity" style="top: 34%; left: 37%;" title="Electricity — marker E, circle dashed border"><span class="pin-label">E</span><span class="sr-only">Electricity</span></span>
+                <span class="pin pin-water" style="top: 50%; left: 66%;" title="Water — marker W, diamond shape"><span class="pin-label">W</span><span class="sr-only">Water</span></span>
+                <span class="pin pin-traffic" style="top: 68%; left: 22%;" title="Traffic — marker T, square double border"><span class="pin-label">T</span><span class="sr-only">Traffic</span></span>
+                <span class="pin pin-streetlight" style="top: 43%; left: 82%;" title="Streetlight — marker S, teardrop"><span class="pin-label">S</span><span class="sr-only">Streetlight</span></span>
+                <span class="pin pin-pothole" style="top: 79%; left: 58%;" title="Pothole — marker P"><span class="pin-label">P</span><span class="sr-only">Pothole</span></span>
+                <span class="pin pin-electricity" style="top: 27%; left: 74%;" title="Electricity — marker E"><span class="pin-label">E</span><span class="sr-only">Electricity</span></span>
 
-                <span id="current-location-dot" title="Current Location (drag me)"></span>
+                <span id="current-location-dot" title="Your location — letter Y, solid circle, drag to move" role="button" tabindex="0" aria-label="Your current location, draggable">Y</span>
             </div>
 
-            <div class="legend" aria-label="Color guide">
-                <div class="legend-item"><span class="legend-dot legend-red"></span> Red pin = Pothole</div>
-                <div class="legend-item"><span class="legend-dot legend-yellow"></span> Yellow pin = Electricity</div>
-                <div class="legend-item"><span class="legend-dot legend-blue"></span> Blue pin = Water</div>
-                <div class="legend-item"><span class="legend-dot legend-green"></span> Green pin = Traffic</div>
-                <div class="legend-item"><span class="legend-dot legend-orange"></span> Orange pin = Streetlight</div>
-                <div class="legend-item"><span class="legend-dot legend-current"></span> Blue dot = Current location</div>
+            <div class="legend" aria-label="Map key: letter, shape, and colour">
+                <div class="legend-item"><span class="legend-sample legend-pothole" aria-hidden="true"><span>P</span></span> <span><span class="legend-key">P</span> — Pothole (square, red)</span></div>
+                <div class="legend-item"><span class="legend-sample legend-electricity" aria-hidden="true">E</span> <span><span class="legend-key">E</span> — Electricity (circle, dashed, yellow)</span></div>
+                <div class="legend-item"><span class="legend-sample legend-water" aria-hidden="true">W</span> <span><span class="legend-key">W</span> — Water (diamond, blue)</span></div>
+                <div class="legend-item"><span class="legend-sample legend-traffic" aria-hidden="true">T</span> <span><span class="legend-key">T</span> — Traffic (square, double border, green)</span></div>
+                <div class="legend-item"><span class="legend-sample legend-streetlight" aria-hidden="true"><span>S</span></span> <span><span class="legend-key">S</span> — Streetlight (teardrop, orange)</span></div>
+                <div class="legend-item"><span class="legend-sample legend-current" aria-hidden="true">Y</span> <span><span class="legend-key">Y</span> — You (solid circle, blue)</span></div>
             </div>
-            <p class="map-note">Tip: drag and drop the blue dot to simulate your location.</p>
+            <p class="map-note">Tip: drag the <strong>Y</strong> dot to simulate your location.</p>
         </section>
 
         <a class="report-button" href="{% url 'report_fault' %}">Report a Fault</a>

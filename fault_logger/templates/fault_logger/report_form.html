@@ -122,18 +122,61 @@
 
         .toggle-row {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
+            gap: 0.75rem;
             background: #fee2e2;
             border: 1px solid #fecaca;
             border-radius: 10px;
             padding: 0.75rem;
-            margin-bottom: 0.45rem;
+            margin-bottom: 0.35rem;
         }
 
-        .toggle-row span {
+        .toggle-row .toggle-label-wrap {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .toggle-row .toggle-title {
             color: #991b1b;
             font-weight: 700;
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+
+        .hazard-help {
+            margin: 0;
+            font-size: 0.82rem;
+            font-weight: 400;
+            color: #7f1d1d;
+            line-height: 1.45;
+        }
+
+        .hazard-help summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #991b1b;
+        }
+
+        .hazard-help ul {
+            margin: 0.4rem 0 0;
+            padding-left: 1.1rem;
+        }
+
+        .hazard-on-notice {
+            display: none;
+            margin: 0.4rem 0 0;
+            padding: 0.5rem 0.6rem;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            color: #991b1b;
+            font-weight: 600;
+        }
+
+        .hazard-on-notice.is-visible {
+            display: block;
         }
 
         .switch {
@@ -204,6 +247,59 @@
             background: var(--button-hover);
         }
 
+        #hazard-confirm-dialog {
+            max-width: 420px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        #hazard-confirm-dialog::backdrop {
+            background: rgba(15, 23, 42, 0.45);
+        }
+
+        .dialog-inner {
+            padding: 1.1rem 1.2rem;
+        }
+
+        .dialog-inner h2 {
+            margin: 0 0 0.6rem;
+            font-size: 1.1rem;
+            color: #991b1b;
+        }
+
+        .dialog-inner p {
+            margin: 0 0 0.75rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #334155;
+        }
+
+        .dialog-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .dialog-actions button {
+            border-radius: 8px;
+            padding: 0.5rem 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+        }
+
+        .dialog-actions button.primary {
+            background: var(--accent-red);
+            color: #fff;
+            border-color: #b91c1c;
+        }
+
     </style>
 </head>
 <body>
@@ -235,12 +331,37 @@
             </div>
 
             <div class="toggle-row">
-                <span>Safety Hazard Fast-Track</span>
+                <div class="toggle-label-wrap">
+                    <span class="toggle-title" id="hazard-toggle-label">Safety Hazard Fast-Track</span>
+                    <details class="hazard-help" id="hazard-help">
+                        <summary>What counts as a safety hazard?</summary>
+                        <p style="margin: 0.35rem 0 0; font-size: 0.8rem; color: #7f1d1d;">Only turn this on if the issue puts people at <strong>immediate risk of injury or worse</strong>—not for routine annoyances.</p>
+                        <ul>
+                            <li>Exposed live electrical wiring or sparking infrastructure</li>
+                            <li>Large road surface collapse, deep hole, or obstacle that could cause a crash</li>
+                            <li>Uncontrolled water main break, flooding a road or walkway</li>
+                            <li>Traffic signals completely dark at a busy crossing</li>
+                        </ul>
+                    </details>
+                    <p class="hazard-on-notice" id="hazard-on-notice" role="status" aria-live="polite">Fast-Track is on: your report will be treated as urgent.</p>
+                </div>
                 <label class="switch" for="is_hazard">
-                    <input id="is_hazard" type="checkbox" name="is_hazard">
+                    <input id="is_hazard" type="checkbox" name="is_hazard" aria-describedby="hazard-help hazard-toggle-label">
                     <span class="slider"></span>
                 </label>
             </div>
+
+            <dialog id="hazard-confirm-dialog" aria-labelledby="hazard-dialog-title" aria-modal="true">
+                <div class="dialog-inner">
+                    <h2 id="hazard-dialog-title">Confirm urgent safety report</h2>
+                    <p>You are about to flag this fault as a <strong>safety hazard</strong>. Misuse can overload emergency teams and delay real emergencies.</p>
+                    <p>Do you confirm this issue poses an <strong>immediate danger</strong> to people or traffic?</p>
+                    <div class="dialog-actions">
+                        <button type="button" id="hazard-dialog-cancel">No, go back</button>
+                        <button type="button" class="primary" id="hazard-dialog-confirm">Yes, it is urgent</button>
+                    </div>
+                </div>
+            </dialog>
 
             <p class="location-note">Location automatically detected.</p>
 
@@ -249,5 +370,76 @@
             </div>
         </form>
     </section>
+    <script>
+        (function () {
+            var input = document.getElementById("is_hazard");
+            var dialog = document.getElementById("hazard-confirm-dialog");
+            var btnConfirm = document.getElementById("hazard-dialog-confirm");
+            var btnCancel = document.getElementById("hazard-dialog-cancel");
+            var notice = document.getElementById("hazard-on-notice");
+            var programmatic = false;
+
+            function syncNotice() {
+                if (notice) notice.classList.toggle("is-visible", input.checked);
+            }
+
+            syncNotice();
+
+            function openConfirmOrFallback() {
+                if (dialog && typeof dialog.showModal === "function") {
+                    dialog.showModal();
+                } else if (window.confirm("Only use Fast-Track for immediate danger to people or traffic. Turn on urgent flag?")) {
+                    programmatic = true;
+                    input.checked = true;
+                    programmatic = false;
+                    syncNotice();
+                }
+            }
+
+            input.addEventListener("change", function () {
+                if (programmatic) return;
+                if (input.checked) {
+                    programmatic = true;
+                    input.checked = false;
+                    programmatic = false;
+                    syncNotice();
+                    openConfirmOrFallback();
+                } else {
+                    syncNotice();
+                }
+            });
+
+            if (btnConfirm) {
+                btnConfirm.addEventListener("click", function () {
+                    programmatic = true;
+                    input.checked = true;
+                    programmatic = false;
+                    syncNotice();
+                    if (dialog && dialog.open) dialog.close();
+                });
+            }
+
+            if (btnCancel) {
+                btnCancel.addEventListener("click", function () {
+                    programmatic = true;
+                    input.checked = false;
+                    programmatic = false;
+                    syncNotice();
+                    if (dialog && dialog.open) dialog.close();
+                });
+            }
+
+            if (dialog) {
+                dialog.addEventListener("cancel", function (e) {
+                    e.preventDefault();
+                    programmatic = true;
+                    input.checked = false;
+                    programmatic = false;
+                    syncNotice();
+                    dialog.close();
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
