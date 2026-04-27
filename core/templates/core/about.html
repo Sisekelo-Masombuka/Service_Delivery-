@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+
+{% block title %}{{ L.about_title }} — {{ L.brand }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .page-card {
+        background: var(--card);
+        border-radius: 16px;
+        padding: 1.75rem;
+        box-shadow: 0 10px 30px rgba(15, 61, 46, 0.1);
+        max-width: 760px;
+    }
+    .page-card h1 {
+        margin-top: 0;
+        color: var(--forest-2);
+        font-size: 1.65rem;
+    }
+    .page-card p {
+        line-height: 1.65;
+        color: #334155;
+        margin: 0 0 1rem;
+    }
+    .back-link {
+        display: inline-flex;
+        margin-top: 1rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<article class="page-card">
+    <h1>{{ L.about_title }}</h1>
+    <p><strong>{{ L.about_lead }}</strong></p>
+    <p>{{ L.about_p1 }}</p>
+    <p>{{ L.about_p2 }}</p>
+    <a class="back-link" href="{% url 'map_landing' %}">← {{ L.btn_back_home }}</a>
+</article>
+{% endblock %}

@@ -1,0 +1,305 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="{{ UI_LANG }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{ L.footer_tagline }}">
+    <title>{% block title %}{{ L.brand }}{% endblock %}</title>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap">
+    <style>
+        :root {
+            --forest: #0f3d2e;
+            --forest-2: #14532d;
+            --gold: #ca8a04;
+            --gold-hover: #a16207;
+            --bg: #f4f7f5;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --focus: #2563eb;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: "Montserrat", system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        a { color: var(--forest-2); }
+        a:focus-visible, button:focus-visible {
+            outline: 2px solid var(--focus);
+            outline-offset: 2px;
+        }
+
+        .skip-link {
+            position: absolute;
+            left: -999px;
+            top: 0;
+            background: #fff;
+            padding: 0.5rem 1rem;
+            z-index: 100;
+        }
+        .skip-link:focus { left: 0; }
+
+        .site-header {
+            background: linear-gradient(135deg, var(--forest), #134e3a);
+            color: #f8fafc;
+            box-shadow: 0 4px 18px rgba(15, 61, 46, 0.35);
+        }
+
+        .header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0.85rem 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .brand-logo {
+            height: 52px;
+            width: auto;
+            max-width: 160px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .brand-text {
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            font-size: 1.15rem;
+        }
+
+        .header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .lang-group {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+
+        .lang-hint {
+            font-size: 0.78rem;
+            opacity: 0.85;
+        }
+
+        .lang-form {
+            display: inline;
+        }
+
+        .lang-form button {
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-radius: 999px;
+            padding: 0.3rem 0.75rem;
+            font-size: 0.82rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .lang-form button:hover { background: rgba(255, 255, 255, 0.18); }
+        .lang-form button.is-current {
+            background: #fff;
+            color: var(--forest);
+            font-weight: 700;
+        }
+
+        .site-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem 1rem;
+            align-items: center;
+        }
+
+        .site-nav a {
+            color: #ecfdf5;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+
+        .site-nav a:hover { text-decoration: underline; }
+
+        .btn-gold, a.btn-gold {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            padding: 0.45rem 0.95rem;
+            border-radius: 10px;
+            background: var(--gold);
+            color: #0f172a !important;
+            font-weight: 700;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        .btn-gold:hover { background: var(--gold-hover); color: #fff !important; }
+
+        main#main {
+            flex: 1;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .site-footer {
+            background: #0b1f18;
+            color: #cbd5e1;
+            margin-top: auto;
+        }
+
+        .footer-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.75rem 1rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .footer-brand {
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 0.04em;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .footer-links a {
+            color: #e2e8f0;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer-links a:hover { text-decoration: underline; }
+
+        .footer-note {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #94a3b8;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(148, 163, 184, 0.25);
+            margin-top: 1rem;
+            padding-top: 1rem;
+            font-size: 0.78rem;
+            color: #94a3b8;
+        }
+
+        .live-region {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <a class="skip-link" href="#main">{{ L.a11y_skip }}</a>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="{% url 'map_landing' %}">
+                {% static 'core/img/citymendersa-logo.png' as logo_png %}
+                {% static 'core/img/logo-mark.svg' as logo_svg %}
+                <img class="brand-logo" src="{{ logo_png }}" alt="{{ L.brand }}" width="140" height="56" loading="lazy" onerror="this.onerror=null;this.src='{{ logo_svg }}';">
+                <span class="brand-text">{{ L.brand }}</span>
+            </a>
+            <div class="header-actions">
+                <nav class="site-nav" aria-label="Primary">
+                    <a href="{% url 'map_landing' %}">{{ L.nav_home }}</a>
+                    <a href="{% url 'about' %}">{{ L.nav_about }}</a>
+                    <a href="{% url 'contact' %}">{{ L.nav_contact }}</a>
+                    <a href="{% url 'report_fault' %}" class="btn-gold">{{ L.nav_report }}</a>
+                    <a href="{% url 'track_fault' %}">{{ L.nav_track }}</a>
+                </nav>
+                <div class="lang-group" role="group" aria-label="{{ L.lang_hint }}">
+                    <span class="lang-hint">{{ L.lang_hint }}</span>
+                    <form method="post" action="{% url 'set_ui_language' %}" class="lang-form">{% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" name="lang" value="en" class="{% if UI_LANG == 'en' %}is-current{% endif %}">{{ L.lang_en }}</button>
+                    </form>
+                    <form method="post" action="{% url 'set_ui_language' %}" class="lang-form">{% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" name="lang" value="af" class="{% if UI_LANG == 'af' %}is-current{% endif %}">{{ L.lang_af }}</button>
+                    </form>
+                    <form method="post" action="{% url 'set_ui_language' %}" class="lang-form">{% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" name="lang" value="zu" class="{% if UI_LANG == 'zu' %}is-current{% endif %}">{{ L.lang_zu }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div>
+                <div class="footer-brand">{{ L.brand }}</div>
+                <p class="footer-note" style="margin: 0.5rem 0 0;">{{ L.footer_tagline }}</p>
+            </div>
+            <div>
+                <div style="font-weight:700;color:#fff;margin-bottom:0.35rem;">{{ L.footer_links }}</div>
+                <div class="footer-links">
+                    <a href="{% url 'map_landing' %}">{{ L.nav_home }}</a>
+                    <a href="{% url 'report_fault' %}">{{ L.nav_report }}</a>
+                    <a href="{% url 'track_fault' %}">{{ L.nav_track }}</a>
+                    <a href="{% url 'about' %}">{{ L.nav_about }}</a>
+                    <a href="{% url 'contact' %}">{{ L.nav_contact }}</a>
+                </div>
+            </div>
+            <div>
+                <p class="footer-note">{{ L.footer_privacy }}</p>
+                <div class="footer-bottom">{{ L.footer_rights }}</div>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

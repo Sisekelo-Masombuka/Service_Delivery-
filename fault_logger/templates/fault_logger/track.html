@@ -1,0 +1,255 @@
+{% extends "core/base.html" %}
+
+{% block title %}{{ L.track_page_title }} — {{ L.brand }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .track-wrap {
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+    .success-banner {
+        background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+        border: 1px solid #86efac;
+        color: #14532d;
+        padding: 1rem 1.15rem;
+        border-radius: 14px;
+        margin-bottom: 1.25rem;
+        font-weight: 700;
+        line-height: 1.5;
+    }
+
+    .lookup-card {
+        background: var(--card);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 12px 36px rgba(15, 61, 46, 0.12);
+        border: 1px solid rgba(15, 61, 46, 0.08);
+        margin-bottom: 1.25rem;
+    }
+
+    .lookup-card h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.5rem;
+        color: var(--forest-2);
+    }
+
+    .lookup-card p { margin: 0 0 1rem; color: var(--muted); }
+
+    .code-input {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        font-size: 1.05rem;
+        font-family: ui-monospace, monospace;
+        letter-spacing: 0.04em;
+    }
+
+    .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        margin-top: 0.85rem;
+        align-items: center;
+    }
+
+    .btn-primary {
+        border: none;
+        border-radius: 12px;
+        padding: 0.85rem 1.2rem;
+        font-weight: 800;
+        cursor: pointer;
+        background: var(--gold);
+        color: #0f172a;
+        font-family: inherit;
+        font-size: 1rem;
+    }
+
+    .btn-primary:hover { background: var(--gold-hover); color: #fff; }
+
+    .btn-ghost {
+        border-radius: 12px;
+        padding: 0.85rem 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        background: #fff;
+        border: 2px solid var(--forest-2);
+        color: var(--forest-2);
+        font-family: inherit;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .alert {
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        margin-top: 0.85rem;
+        font-weight: 600;
+    }
+
+    .alert-warn {
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        color: #9a3412;
+    }
+
+    .result-card {
+        background: var(--card);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 12px 36px rgba(15, 61, 46, 0.12);
+        border: 1px solid rgba(15, 61, 46, 0.08);
+    }
+
+    .code-big {
+        font-family: ui-monospace, monospace;
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        color: var(--forest-2);
+        margin: 0.35rem 0 1rem;
+        word-break: break-all;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        background: #ecfdf5;
+        border: 1px solid #bbf7d0;
+        font-weight: 800;
+        color: #14532d;
+    }
+
+    .timeline {
+        display: grid;
+        gap: 0.65rem;
+        margin: 1.25rem 0 0;
+    }
+
+    .step {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        padding: 0.65rem 0.75rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #f8fafc;
+    }
+
+    .step.is-done {
+        border-color: #86efac;
+        background: #f0fdf4;
+    }
+
+    .step.is-current {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 2px rgba(202, 138, 4, 0.25);
+    }
+
+    .step-index {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        background: #e2e8f0;
+        color: #0f172a;
+        flex-shrink: 0;
+    }
+
+    .step.is-done .step-index { background: #22c55e; color: #fff; }
+
+    .meta-line {
+        font-size: 0.9rem;
+        color: var(--muted);
+        margin-top: 0.75rem;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="track-wrap">
+    {% if welcome and fault %}
+        <div class="success-banner" role="status" tabindex="-1">
+            <strong>{{ L.success_title }}</strong>
+            <div style="margin-top:0.35rem;">{{ L.success_body }}</div>
+            <strong style="display:block;margin-top:0.45rem;font-size:1.15rem;">{{ fault.tracking_code }}</strong>
+        </div>
+    {% endif %}
+
+    <section class="lookup-card">
+        <h1>{{ L.track_heading }}</h1>
+        <p>{{ L.track_lead }}</p>
+        <form method="post" action="{% url 'track_fault' %}">
+            {% csrf_token %}
+            <label class="sr-only" for="id_code">{{ L.track_code_label }}</label>
+            <input class="code-input" id="id_code" name="code" type="text" autocomplete="off" placeholder="CMSA-XXXXXXXX" value="{{ lookup_code }}">
+            <div class="btn-row">
+                <button class="btn-primary" type="submit">{{ L.track_button }}</button>
+                <a class="btn-ghost" href="{% url 'report_fault' %}">{{ L.nav_report }}</a>
+            </div>
+        </form>
+        {% if lookup_code and not fault %}
+            <div class="alert alert-warn" role="alert">{{ L.track_not_found }}</div>
+        {% endif %}
+    </section>
+
+    {% if fault %}
+        <section class="result-card" aria-labelledby="track-result-title">
+            <h2 id="track-result-title" style="margin:0 0 0.35rem;font-size:1.2rem;color:var(--forest-2);">{{ L.track_status }}</h2>
+            <div><span class="status-pill">{{ fault.get_status_display }}</span></div>
+            <p style="margin:0.75rem 0 0;color:#334155;line-height:1.55;">{{ fault.get_issue_type_display }}{% if fault.is_hazard %} — <strong>Urgent</strong>{% endif %}</p>
+
+            <div class="meta-line">{{ L.track_submitted }}: {{ fault.created_at|date:"Y-m-d H:i" }} UTC · {{ L.track_updated }}: {{ fault.updated_at|date:"Y-m-d H:i" }} UTC</div>
+
+            <p class="code-big" aria-label="{{ L.track_code_label }}">{{ fault.tracking_code }}</p>
+
+            <p style="margin:0 0 0.5rem;font-weight:700;color:var(--forest-2);">{{ L.track_timeline }}</p>
+            <div class="timeline" role="list">
+                {% with s=fault.status %}
+                <div class="step is-done {% if s == 'received' %}is-current{% endif %}" role="listitem">
+                    <span class="step-index">1</span>
+                    <div><strong>{{ L.status_received }}</strong><br><span style="color:var(--muted);font-size:0.88rem;">We logged your report.</span></div>
+                </div>
+                <div class="step {% if s == 'triaged' or s == 'in_progress' or s == 'resolved' %}is-done{% endif %} {% if s == 'triaged' %}is-current{% endif %}" role="listitem">
+                    <span class="step-index">2</span>
+                    <div><strong>{{ L.status_triaged }}</strong><br><span style="color:var(--muted);font-size:0.88rem;">Priority and routing (demo).</span></div>
+                </div>
+                <div class="step {% if s == 'in_progress' or s == 'resolved' %}is-done{% endif %} {% if s == 'in_progress' %}is-current{% endif %}" role="listitem">
+                    <span class="step-index">3</span>
+                    <div><strong>{{ L.status_in_progress }}</strong><br><span style="color:var(--muted);font-size:0.88rem;">Work is scheduled or underway.</span></div>
+                </div>
+                <div class="step {% if s == 'resolved' %}is-done is-current{% endif %}" role="listitem">
+                    <span class="step-index">4</span>
+                    <div><strong>{{ L.status_resolved }}</strong><br><span style="color:var(--muted);font-size:0.88rem;">Closed in this demo when marked resolved.</span></div>
+                </div>
+                {% endwith %}
+            </div>
+
+            <div class="btn-row" style="margin-top:1.25rem;">
+                <a class="btn-primary" style="text-decoration:none;display:inline-flex;" href="{% url 'fault_pdf' fault.tracking_code %}">{{ L.track_download }}</a>
+                <a class="btn-ghost" href="{% url 'map_landing' %}">{{ L.nav_home }}</a>
+            </div>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

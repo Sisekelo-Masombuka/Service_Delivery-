@@ -1,361 +1,491 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report a Fault</title>
-    <style>
-        :root {
-            --bg: #f5f7fb;
-            --card: #ffffff;
-            --text: #1f2937;
-            --muted: #64748b;
-            --accent-red: #dc2626;
-            --button: #0b5ed7;
-            --button-hover: #0a53be;
-        }
+{% extends "core/base.html" %}
+{% load static %}
 
-        * {
-            box-sizing: border-box;
-            font-family: Arial, Helvetica, sans-serif;
-        }
+{% block title %}{{ L.report_page_title }} — {{ L.brand }}{% endblock %}
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            background: var(--bg);
-            color: var(--text);
-            padding: 1rem;
-        }
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+    .report-layout {
+        max-width: 720px;
+        margin: 0 auto;
+    }
 
-        .form-card {
-            position: relative;
-            width: min(620px, 100%);
-            background: var(--card);
-            border-radius: 14px;
-            padding: 1.4rem;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        }
+    .form-shell {
+        position: relative;
+        background: var(--card);
+        border-radius: 18px;
+        padding: 1.75rem 1.5rem 1.5rem;
+        box-shadow: 0 16px 45px rgba(15, 61, 46, 0.14);
+        border: 1px solid rgba(15, 61, 46, 0.08);
+    }
 
-        .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 1px solid #d1d5db;
-            color: #475569;
-            background: #f8fafc;
-            display: grid;
-            place-items: center;
-            text-decoration: none;
-            font-size: 1.2rem;
-            font-weight: 700;
-            line-height: 1;
-        }
+    .close-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        color: #475569;
+        background: #f8fafc;
+        display: grid;
+        place-items: center;
+        text-decoration: none;
+        font-size: 1.35rem;
+        font-weight: 700;
+        line-height: 1;
+    }
 
-        .close-btn:hover {
-            color: #0f172a;
-            background: #e2e8f0;
-        }
+    .close-btn:hover { background: #e2e8f0; color: #0f172a; }
 
-        h1 {
-            margin-top: 0;
-            margin-bottom: 1rem;
-            font-size: 1.4rem;
-        }
+    .form-shell h1 {
+        margin: 0 0 0.25rem;
+        font-size: 1.55rem;
+        color: var(--forest-2);
+    }
 
-        .field {
-            margin-bottom: 1rem;
-        }
+    .form-lead {
+        margin: 0 0 1.25rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
 
-        label {
-            display: block;
-            margin-bottom: 0.45rem;
-            font-weight: 600;
-        }
+    .alert {
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
 
-        select,
-        textarea {
-            width: 100%;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            padding: 0.7rem;
-            font-size: 1rem;
-            background: #fff;
-        }
+    .alert-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+    }
 
-        .description-wrap {
-            position: relative;
-        }
+    .field { margin-bottom: 1.1rem; }
 
-        textarea {
-            min-height: 160px;
-            resize: vertical;
-            padding-right: 2.8rem;
-        }
+    label {
+        display: block;
+        margin-bottom: 0.4rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
 
-        .mic {
-            position: absolute;
-            right: 10px;
-            bottom: 10px;
-            width: 34px;
-            height: 34px;
-            border: 1px solid #d1d5db;
-            border-radius: 999px;
-            display: grid;
-            place-items: center;
-            color: var(--muted);
-            font-size: 1.15rem;
-            background: #f8fafc;
-            pointer-events: none;
-        }
+    .input-control, .file-input {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 0.75rem 0.85rem;
+        font-size: 1rem;
+        font-family: inherit;
+        background: #fff;
+    }
 
-        .upload-note {
-            margin-top: 0.35rem;
-            color: #64748b;
-            font-size: 0.82rem;
-        }
+    textarea.input-control {
+        min-height: 170px;
+        resize: vertical;
+        padding-right: 2.8rem;
+    }
 
-        .toggle-row {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 0.75rem;
-            background: #fee2e2;
-            border: 1px solid #fecaca;
-            border-radius: 10px;
-            padding: 0.75rem;
-            margin-bottom: 0.35rem;
-        }
+    .description-wrap { position: relative; }
 
-        .toggle-row .toggle-label-wrap {
-            flex: 1;
-            min-width: 0;
-        }
+    .mic-btn {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        width: 36px;
+        height: 36px;
+        border: 1px solid #d1d5db;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        font-size: 1.15rem;
+        background: #f8fafc;
+        cursor: pointer;
+        pointer-events: auto;
+    }
 
-        .toggle-row .toggle-title {
-            color: #991b1b;
-            font-weight: 700;
-            display: block;
-            margin-bottom: 0.35rem;
-        }
+    .mic-btn.is-on {
+        color: #fff;
+        background: #dc2626;
+        border-color: #b91c1c;
+    }
 
-        .hazard-help {
-            margin: 0;
-            font-size: 0.82rem;
-            font-weight: 400;
-            color: #7f1d1d;
-            line-height: 1.45;
-        }
+    .hint { font-size: 0.85rem; color: var(--muted); margin-top: 0.35rem; }
 
-        .hazard-help summary {
-            cursor: pointer;
-            font-weight: 600;
-            color: #991b1b;
-        }
+    .location-card {
+        background: linear-gradient(135deg, #ecfdf5, #f8fafc);
+        border: 1px solid #bbf7d0;
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
+        margin-bottom: 1rem;
+    }
 
-        .hazard-help ul {
-            margin: 0.4rem 0 0;
-            padding-left: 1.1rem;
-        }
+    .location-card strong { color: var(--forest-2); }
 
-        .hazard-on-notice {
-            display: none;
-            margin: 0.4rem 0 0;
-            padding: 0.5rem 0.6rem;
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 8px;
-            font-size: 0.82rem;
-            color: #991b1b;
-            font-weight: 600;
-        }
+    .location-card a {
+        font-weight: 700;
+        display: inline-block;
+        margin-top: 0.5rem;
+    }
 
-        .hazard-on-notice.is-visible {
-            display: block;
-        }
+    .location-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        margin-top: 0.75rem;
+        align-items: center;
+    }
 
-        .switch {
-            position: relative;
-            width: 52px;
-            height: 30px;
-        }
+    .btn-locate {
+        border: none;
+        border-radius: 12px;
+        padding: 0.65rem 0.9rem;
+        font-weight: 800;
+        cursor: pointer;
+        background: #14532d;
+        color: #fff;
+        font-family: inherit;
+        font-size: 0.92rem;
+    }
 
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
+    .btn-locate:hover { background: #0f3d2e; }
 
-        .slider {
-            position: absolute;
-            inset: 0;
-            cursor: pointer;
-            background: #cbd5e1;
-            border-radius: 999px;
-            transition: background 0.2s ease;
-        }
+    .btn-soft {
+        border-radius: 12px;
+        padding: 0.65rem 0.9rem;
+        font-weight: 800;
+        cursor: pointer;
+        background: #fff;
+        border: 2px solid #14532d;
+        color: #14532d;
+        font-family: inherit;
+        font-size: 0.92rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
 
-        .slider::before {
-            content: "";
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            left: 4px;
-            top: 4px;
-            border-radius: 50%;
-            background: #fff;
-            transition: transform 0.2s ease;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-        }
+    .place-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.45rem;
+        margin-top: 0.35rem;
+    }
 
-        .switch input:checked + .slider {
-            background: var(--accent-red);
-        }
+    .place-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid #bbf7d0;
+        font-weight: 800;
+        color: #14532d;
+        max-width: 100%;
+    }
 
-        .switch input:checked + .slider::before {
-            transform: translateX(22px);
-        }
+    .place-pill span {
+        display: inline-block;
+        max-width: 56ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 
-        .location-note {
-            margin: 0 0 1rem;
-            color: #334155;
-            font-size: 0.9rem;
-        }
+    #report-mini-map {
+        height: 220px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        margin-top: 0.85rem;
+        overflow: hidden;
+    }
 
-        .actions {
-            display: block;
-        }
+    .leaflet-div-icon { background: transparent; border: none; }
 
-        .submit-btn {
-            width: 100%;
-            border: none;
-            border-radius: 10px;
-            padding: 0.9rem;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            color: white;
-            background: var(--button);
-        }
+    .pin-you {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #2563eb;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #0f172a, 0 0 0 6px rgba(37, 99, 235, 0.25);
+        color: #fff;
+        font-weight: 900;
+        font-size: 0.75rem;
+    }
 
-        .submit-btn:hover {
-            background: var(--button-hover);
-        }
+    .location-status {
+        margin-top: 0.6rem;
+        font-size: 0.88rem;
+        color: var(--muted);
+    }
 
-        #hazard-confirm-dialog {
-            max-width: 420px;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            padding: 0;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-        }
+    .hazard-details {
+        border: 1px solid #fed7aa;
+        border-radius: 14px;
+        background: #fffaf1;
+        padding: 0.2rem;
+        margin-bottom: 0.65rem;
+    }
 
-        #hazard-confirm-dialog::backdrop {
-            background: rgba(15, 23, 42, 0.45);
-        }
+    .hazard-details summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 0.65rem 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        border-radius: 12px;
+        font-weight: 900;
+        color: #7c2d12;
+    }
 
-        .dialog-inner {
-            padding: 1.1rem 1.2rem;
-        }
+    .hazard-details summary::-webkit-details-marker { display: none; }
 
-        .dialog-inner h2 {
-            margin: 0 0 0.6rem;
-            font-size: 1.1rem;
-            color: #991b1b;
-        }
+    .hazard-inner {
+        padding: 0.75rem 0.95rem 0.95rem;
+    }
 
-        .dialog-inner p {
-            margin: 0 0 0.75rem;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            color: #334155;
-        }
+    .toggle-title {
+        color: #9a3412;
+        font-weight: 900;
+        display: block;
+        margin: 0;
+    }
 
-        .dialog-actions {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: flex-end;
-            flex-wrap: wrap;
-            margin-top: 0.5rem;
-        }
+    .hazard-help summary {
+        cursor: pointer;
+        font-weight: 700;
+        color: #9a3412;
+    }
 
-        .dialog-actions button {
-            border-radius: 8px;
-            padding: 0.5rem 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            border: 1px solid #cbd5e1;
-            background: #fff;
-            color: #334155;
-        }
+    .hazard-help ul { margin: 0.45rem 0 0; padding-left: 1.15rem; color: #7c2d12; font-size: 0.88rem; }
 
-        .dialog-actions button.primary {
-            background: var(--accent-red);
-            color: #fff;
-            border-color: #b91c1c;
-        }
+    .hazard-on-notice {
+        display: none;
+        margin: 0.45rem 0 0;
+        padding: 0.55rem 0.65rem;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        font-size: 0.86rem;
+        color: #92400e;
+        font-weight: 700;
+    }
 
-    </style>
-</head>
-<body>
-    <section class="form-card">
-        <a class="close-btn" href="{% url 'map_landing' %}" aria-label="Close and go back">x</a>
-        <h1>Report New Fault</h1>
-        <form>
-            <div class="field">
-                <label for="issue_type">Issue Type</label>
-                <select id="issue_type" name="issue_type">
-                    <option>Pothole</option>
-                    <option>Water Leak</option>
-                    <option>Streetlight</option>
-                </select>
-            </div>
+    .hazard-on-notice.is-visible { display: block; }
 
-            <div class="field">
-                <label for="description">Description</label>
-                <div class="description-wrap">
-                    <textarea id="description" name="description" placeholder="Describe the problem here..."></textarea>
-                    <div class="mic" title="Voice-to-text placeholder" aria-hidden="true">🎤</div>
+    .switch {
+        position: relative;
+        width: 54px;
+        height: 32px;
+        flex-shrink: 0;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+        position: absolute;
+        inset: 0;
+        cursor: pointer;
+        background: #cbd5e1;
+        border-radius: 999px;
+        transition: background 0.2s ease;
+    }
+
+    .slider::before {
+        content: "";
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        left: 4px;
+        top: 4px;
+        border-radius: 50%;
+        background: #fff;
+        transition: transform 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+
+    .switch input:checked + .slider { background: #dc2626; }
+    .switch input:checked + .slider::before { transform: translateX(22px); }
+
+    .submit-btn {
+        width: 100%;
+        border: none;
+        border-radius: 14px;
+        padding: 1rem;
+        font-size: 1.05rem;
+        font-weight: 800;
+        cursor: pointer;
+        color: #0f172a;
+        background: var(--gold);
+        font-family: inherit;
+    }
+
+    .submit-btn:hover { background: var(--gold-hover); color: #fff; }
+
+    .submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+    #hazard-confirm-dialog {
+        max-width: 440px;
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        padding: 0;
+        box-shadow: 0 16px 50px rgba(0, 0, 0, 0.25);
+    }
+
+    #hazard-confirm-dialog::backdrop { background: rgba(15, 23, 42, 0.5); }
+
+    .dialog-inner { padding: 1.15rem 1.25rem; }
+
+    .dialog-inner h2 {
+        margin: 0 0 0.55rem;
+        font-size: 1.15rem;
+        color: #991b1b;
+    }
+
+    .dialog-inner p {
+        margin: 0 0 0.8rem;
+        font-size: 0.95rem;
+        line-height: 1.55;
+        color: #334155;
+    }
+
+    .dialog-actions {
+        display: flex;
+        gap: 0.55rem;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+    }
+
+    .dialog-actions button {
+        border-radius: 10px;
+        padding: 0.55rem 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        color: #334155;
+        font-family: inherit;
+    }
+
+    .dialog-actions button.primary {
+        background: #dc2626;
+        color: #fff;
+        border-color: #b91c1c;
+    }
+
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 0.35rem 0 0;
+        color: #b91c1c;
+        font-size: 0.88rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-layout">
+    <section class="form-shell">
+        <a class="close-btn" href="{% url 'map_landing' %}" aria-label="{{ L.btn_back_home }}">×</a>
+        <h1>{{ L.report_heading }}</h1>
+        <p class="form-lead" id="desc-hint">{{ L.report_desc_placeholder }}</p>
+
+        {% if messages %}
+            {% for message in messages %}
+                {% if forloop.first and 'error' in message.tags %}
+                    <div class="alert alert-error" role="alert">{{ L.report_required }}</div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-error" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <form method="post" action="{% url 'report_fault' %}" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <div class="location-card" aria-live="polite">
+                <strong>{{ L.report_location_confirm }}</strong><br>
+                <span id="loc-readout">{{ location_preview_lat }}, {{ location_preview_lng }}</span>
+                <div class="place-row" aria-label="Location label">
+                    <span style="font-weight:800;color:#14532d;">{{ L.report_location_near }}</span>
+                    <span class="place-pill">📍 <span id="loc-place">{{ L.report_location_unknown }}</span></span>
                 </div>
+                <div class="hint">{{ L.report_pick_on_map }}</div>
+                <div class="location-actions">
+                    <button type="button" class="btn-locate" id="btn-gps">{{ L.report_location_auto }}</button>
+                    <a class="btn-soft" href="{% url 'map_landing' %}">{{ L.nav_home }} — {{ L.map_title }}</a>
+                </div>
+                <div id="report-mini-map" role="application" aria-label="Location picker map"></div>
+                <div id="loc-status" class="location-status" role="status" aria-live="polite"></div>
             </div>
 
             <div class="field">
-                <label for="fault_image">Upload Image (Optional)</label>
-                <input id="fault_image" name="fault_image" type="file" accept="image/*">
-                <div class="upload-note">Attach a photo if available.</div>
+                <label for="id_issue_type">{{ L.report_issue_label }}</label>
+                {{ form.issue_type }}
+                {% if form.issue_type.errors %}<ul class="errorlist">{% for e in form.issue_type.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
             </div>
 
-            <div class="toggle-row">
-                <div class="toggle-label-wrap">
-                    <span class="toggle-title" id="hazard-toggle-label">Safety Hazard Fast-Track</span>
+            <div class="field">
+                <label for="id_description">{{ L.report_desc_label }}</label>
+                <div class="description-wrap">
+                    {{ form.description }}
+                    <button class="mic-btn" type="button" id="mic-btn" aria-label="{{ L.mic_label }}" title="{{ L.mic_label }}">🎤</button>
+                </div>
+                {% if form.description.errors %}<ul class="errorlist">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+
+            <div class="field">
+                <label for="id_image">{{ L.report_image_label }}</label>
+                {{ form.image }}
+                <div class="hint">{{ L.report_image_help }}</div>
+                {% if form.image.errors %}<ul class="errorlist">{% for e in form.image.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+
+            <details class="hazard-details" id="hazard-details">
+                <summary aria-controls="hazard-inner">
+                    <span class="toggle-title" id="hazard-toggle-label">{{ L.report_hazard_optional }}</span>
+                    <label class="switch" for="id_is_hazard">
+                        {{ form.is_hazard }}
+                        <span class="slider"></span>
+                    </label>
+                </summary>
+                <div class="hazard-inner" id="hazard-inner">
                     <details class="hazard-help" id="hazard-help">
-                        <summary>What counts as a safety hazard?</summary>
-                        <p style="margin: 0.35rem 0 0; font-size: 0.8rem; color: #7f1d1d;">Only turn this on if the issue puts people at <strong>immediate risk of injury or worse</strong>—not for routine annoyances.</p>
+                        <summary>{{ L.report_hazard_summary }}</summary>
+                        <p style="margin:0.4rem 0 0;font-size:0.86rem;color:#7c2d12;">Only enable for <strong>immediate</strong> danger to people or traffic.</p>
                         <ul>
-                            <li>Exposed live electrical wiring or sparking infrastructure</li>
-                            <li>Large road surface collapse, deep hole, or obstacle that could cause a crash</li>
-                            <li>Uncontrolled water main break, flooding a road or walkway</li>
+                            <li>Exposed live wiring or sparking infrastructure</li>
+                            <li>Serious road collapse or crash risk</li>
+                            <li>Uncontrolled water flooding a road or walkway</li>
                             <li>Traffic signals completely dark at a busy crossing</li>
                         </ul>
                     </details>
-                    <p class="hazard-on-notice" id="hazard-on-notice" role="status" aria-live="polite">Fast-Track is on: your report will be treated as urgent.</p>
+                    <p class="hazard-on-notice" id="hazard-on-notice" role="status" aria-live="polite">{{ L.report_hazard_notice }}</p>
                 </div>
-                <label class="switch" for="is_hazard">
-                    <input id="is_hazard" type="checkbox" name="is_hazard" aria-describedby="hazard-help hazard-toggle-label">
-                    <span class="slider"></span>
-                </label>
-            </div>
+            </details>
 
             <dialog id="hazard-confirm-dialog" aria-labelledby="hazard-dialog-title" aria-modal="true">
                 <div class="dialog-inner">
                     <h2 id="hazard-dialog-title">Confirm urgent safety report</h2>
-                    <p>You are about to flag this fault as a <strong>safety hazard</strong>. Misuse can overload emergency teams and delay real emergencies.</p>
-                    <p>Do you confirm this issue poses an <strong>immediate danger</strong> to people or traffic?</p>
+                    <p>You are flagging this fault as a <strong>safety hazard</strong>. Misuse can overload emergency teams.</p>
+                    <p>Do you confirm <strong>immediate danger</strong> to people or traffic?</p>
                     <div class="dialog-actions">
                         <button type="button" id="hazard-dialog-cancel">No, go back</button>
                         <button type="button" class="primary" id="hazard-dialog-confirm">Yes, it is urgent</button>
@@ -363,83 +493,336 @@
                 </div>
             </dialog>
 
-            <p class="location-note">Location automatically detected.</p>
+            {{ form.latitude }}
+            {{ form.longitude }}
 
-            <div class="actions">
-                <button class="submit-btn" type="button">Submit</button>
+            <div class="field" style="margin-top:1rem;">
+                <button class="submit-btn" type="submit" id="submit-report">{{ L.report_submit }}</button>
             </div>
         </form>
     </section>
-    <script>
-        (function () {
-            var input = document.getElementById("is_hazard");
-            var dialog = document.getElementById("hazard-confirm-dialog");
-            var btnConfirm = document.getElementById("hazard-dialog-confirm");
-            var btnCancel = document.getElementById("hazard-dialog-cancel");
-            var notice = document.getElementById("hazard-on-notice");
-            var programmatic = false;
+</div>
+{% endblock %}
 
-            function syncNotice() {
-                if (notice) notice.classList.toggle("is-visible", input.checked);
-            }
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(function () {
+    var latInput = document.getElementById("id_latitude");
+    var lngInput = document.getElementById("id_longitude");
+    var readout = document.getElementById("loc-readout");
+    var statusEl = document.getElementById("loc-status");
+    var gpsBtn = document.getElementById("btn-gps");
 
+    function announce(msg) {
+        if (statusEl) statusEl.textContent = msg || "";
+    }
+
+    function parseNum(v) {
+        var n = parseFloat(v);
+        return Number.isFinite(n) ? n : null;
+    }
+
+    function syncReadout() {
+        var lat = parseNum(latInput && latInput.value);
+        var lng = parseNum(lngInput && lngInput.value);
+        if (readout && lat !== null && lng !== null) {
+            readout.textContent = lat.toFixed(5) + ", " + lng.toFixed(5);
+        }
+    }
+
+    function setCoords(lat, lng, sourceLabel) {
+        if (!latInput || !lngInput) return;
+        latInput.value = lat.toFixed(6);
+        lngInput.value = lng.toFixed(6);
+        syncReadout();
+        if (sourceLabel) announce(sourceLabel + ": " + lat.toFixed(5) + ", " + lng.toFixed(5));
+        reverseGeocode(lat, lng);
+    }
+
+    // Mini-map picker
+    var mapEl = document.getElementById("report-mini-map");
+    var miniMap = null;
+    var youMarker = null;
+    if (mapEl && window.L) {
+        var startLat = parseNum(latInput && latInput.value) || -28.738;
+        var startLng = parseNum(lngInput && lngInput.value) || 24.763;
+        miniMap = L.map(mapEl, { zoomControl: true, scrollWheelZoom: false });
+        // Use CARTO tiles (more reliable for demos than the volunteer OSM tile servers)
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+            maxZoom: 19,
+            subdomains: "abcd",
+            attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+        }).addTo(miniMap);
+        miniMap.setView([startLat, startLng], 15);
+        var youIcon = L.divIcon({
+            html: '<div class="pin-you" aria-hidden="true">Y</div>',
+            className: "",
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+        });
+        youMarker = L.marker([startLat, startLng], { draggable: true, icon: youIcon }).addTo(miniMap);
+        youMarker.on("dragend", function (e) {
+            var p = e.target.getLatLng();
+            setCoords(p.lat, p.lng, "Map");
+        });
+        miniMap.on("click", function (e) {
+            if (!youMarker) return;
+            youMarker.setLatLng(e.latlng);
+            setCoords(e.latlng.lat, e.latlng.lng, "Map");
+        });
+    }
+
+    function syncMarkerFromInputs() {
+        if (!youMarker) return;
+        var lat = parseNum(latInput && latInput.value);
+        var lng = parseNum(lngInput && lngInput.value);
+        if (lat === null || lng === null) return;
+        youMarker.setLatLng([lat, lng]);
+        if (miniMap) miniMap.setView([lat, lng]);
+        syncReadout();
+        reverseGeocode(lat, lng);
+    }
+
+    if (latInput) latInput.addEventListener("change", syncMarkerFromInputs);
+    if (lngInput) lngInput.addEventListener("change", syncMarkerFromInputs);
+    syncReadout();
+    // Reverse geocode to a human-friendly label (best-effort, demo-friendly)
+    var placeEl = document.getElementById("loc-place");
+    var lastLookupKey = "";
+    var lookupTimer = null;
+
+    function reverseGeocode(lat, lng) {
+        if (!placeEl) return;
+        var key = lat.toFixed(4) + "," + lng.toFixed(4);
+        if (key === lastLookupKey) return;
+        lastLookupKey = key;
+
+        if (lookupTimer) window.clearTimeout(lookupTimer);
+        lookupTimer = window.setTimeout(function () {
+            var cacheKey = "cmsa_place_" + key;
+            try {
+                var cached = sessionStorage.getItem(cacheKey);
+                if (cached) {
+                    placeEl.textContent = cached;
+                    return;
+                }
+            } catch (_) {}
+
+            // maps.co reverse geocoding is a demo-friendly proxy with CORS enabled
+            var url = "https://geocode.maps.co/reverse?lat=" + encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lng);
+            fetch(url)
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (data) {
+                    if (!data) throw new Error("no data");
+                    var label = "";
+                    if (data.address) {
+                        label =
+                            data.address.suburb ||
+                            data.address.neighbourhood ||
+                            data.address.village ||
+                            data.address.town ||
+                            data.address.city ||
+                            data.address.county ||
+                            "";
+                        var road = data.address.road || data.address.pedestrian || "";
+                        if (road && label) label = road + ", " + label;
+                        else if (road) label = road;
+                    }
+                    if (!label && data.display_name) label = String(data.display_name).split(",").slice(0, 2).join(",").trim();
+                    if (!label) label = "{{ L.report_location_unknown|escapejs }}";
+                    placeEl.textContent = label;
+                    try { sessionStorage.setItem(cacheKey, label); } catch (_) {}
+                })
+                .catch(function () {
+                    // Quiet fallback; keep UI human-readable even if API blocks
+                    if (placeEl.textContent.trim() === "") placeEl.textContent = "{{ L.report_location_unknown|escapejs }}";
+                });
+        }, 250);
+    }
+
+    // GPS auto-detect with confirm/edit
+    function useGPS() {
+        if (!navigator.geolocation) {
+            announce("{{ L.report_location_auto_failed|escapejs }}");
+            return;
+        }
+        gpsBtn.disabled = true;
+        announce("{{ L.report_location_auto_working|escapejs }}");
+                navigator.geolocation.getCurrentPosition(
+            function (pos) {
+                gpsBtn.disabled = false;
+                var lat = pos.coords.latitude;
+                var lng = pos.coords.longitude;
+                setCoords(lat, lng, "GPS");
+                syncMarkerFromInputs();
+            },
+            function () {
+                gpsBtn.disabled = false;
+                announce("{{ L.report_location_auto_failed|escapejs }}");
+            },
+            { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
+        );
+    }
+    if (gpsBtn) gpsBtn.addEventListener("click", useGPS);
+
+    var input = document.getElementById("id_is_hazard");
+    var dialog = document.getElementById("hazard-confirm-dialog");
+    var btnConfirm = document.getElementById("hazard-dialog-confirm");
+    var btnCancel = document.getElementById("hazard-dialog-cancel");
+    var notice = document.getElementById("hazard-on-notice");
+    var programmatic = false;
+
+    function syncNotice() {
+        if (notice) notice.classList.toggle("is-visible", input && input.checked);
+    }
+    syncNotice();
+
+    function openConfirmOrFallback() {
+        if (dialog && typeof dialog.showModal === "function") {
+            dialog.showModal();
+        } else if (window.confirm("Only use Fast-Track for immediate danger. Continue?")) {
+            programmatic = true;
+            input.checked = true;
+            programmatic = false;
             syncNotice();
+        }
+    }
 
-            function openConfirmOrFallback() {
-                if (dialog && typeof dialog.showModal === "function") {
-                    dialog.showModal();
-                } else if (window.confirm("Only use Fast-Track for immediate danger to people or traffic. Turn on urgent flag?")) {
-                    programmatic = true;
-                    input.checked = true;
-                    programmatic = false;
-                    syncNotice();
+    if (input) {
+        input.addEventListener("change", function () {
+            if (programmatic) return;
+            if (input.checked) {
+                programmatic = true;
+                input.checked = false;
+                programmatic = false;
+                syncNotice();
+                openConfirmOrFallback();
+            } else {
+                syncNotice();
+            }
+        });
+    }
+
+    if (btnConfirm) {
+        btnConfirm.addEventListener("click", function () {
+            programmatic = true;
+            input.checked = true;
+            programmatic = false;
+            syncNotice();
+            if (dialog && dialog.open) dialog.close();
+        });
+    }
+
+    if (btnCancel) {
+        btnCancel.addEventListener("click", function () {
+            programmatic = true;
+            input.checked = false;
+            programmatic = false;
+            syncNotice();
+            if (dialog && dialog.open) dialog.close();
+        });
+    }
+
+    if (dialog) {
+        dialog.addEventListener("cancel", function (e) {
+            e.preventDefault();
+            programmatic = true;
+            input.checked = false;
+            programmatic = false;
+            syncNotice();
+            dialog.close();
+        });
+    }
+
+    var form = document.querySelector("form[method='post']");
+    var submitBtn = document.getElementById("submit-report");
+    if (form && submitBtn) {
+        form.addEventListener("submit", function () {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "{{ L.report_saving|escapejs }}";
+        });
+    }
+
+    // Speech-to-text (Web Speech API) for description
+    var micBtn = document.getElementById("mic-btn");
+    var desc = document.getElementById("id_description");
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var rec = null;
+    var isRecording = false;
+
+    function setMicState(on) {
+        isRecording = on;
+        if (!micBtn) return;
+        micBtn.classList.toggle("is-on", on);
+        micBtn.textContent = on ? "■" : "🎤";
+        micBtn.title = on ? "{{ L.mic_stop|escapejs }}" : "{{ L.mic_start|escapejs }}";
+    }
+
+    if (micBtn) {
+        micBtn.title = "{{ L.mic_start|escapejs }}";
+        micBtn.addEventListener("click", function () {
+            if (!SpeechRecognition) {
+                announce("{{ L.mic_not_supported|escapejs }}");
+                return;
+            }
+            if (!desc) return;
+
+            if (!rec) {
+                rec = new SpeechRecognition();
+                // Prefer SA locale variants when possible
+                var lang = (document.documentElement.lang || "en").toLowerCase();
+                rec.lang = (lang === "af") ? "af-ZA" : (lang === "zu" ? "zu-ZA" : "en-ZA");
+                rec.interimResults = true;
+                rec.continuous = true;
+
+                var lastInterim = "";
+                rec.onresult = function (event) {
+                    var interim = "";
+                    var finals = "";
+
+                    for (var i = event.resultIndex; i < event.results.length; i++) {
+                        var t = (event.results[i][0].transcript || "").trim();
+                        if (!t) continue;
+                        if (event.results[i].isFinal) finals += (finals ? " " : "") + t;
+                        else interim += (interim ? " " : "") + t;
+                    }
+
+                    // Write only FINAL results into the textbox (reliable + less buggy)
+                    if (finals) {
+                        desc.focus();
+                        var base = (desc.value || "").trimEnd();
+                        desc.value = (base ? base + " " : "") + finals + " ";
+                        lastInterim = "";
+                    } else if (interim && interim !== lastInterim) {
+                        // Show interim feedback via live region
+                        announce("{{ L.mic_label|escapejs }}: " + interim);
+                        lastInterim = interim;
+                    }
+                };
+                rec.onerror = function (e) {
+                    setMicState(false);
+                    if (e && e.error === "not-allowed") announce("{{ L.mic_permission_denied|escapejs }}");
+                };
+                rec.onend = function () {
+                    announce("");
+                    setMicState(false);
+                };
+            }
+
+            if (!isRecording) {
+                try {
+                    rec.start();
+                    announce("{{ L.mic_label|escapejs }}: {{ L.mic_stop|escapejs }}");
+                    setMicState(true);
+                } catch (_) {
+                    // start() can throw if called twice quickly
                 }
+            } else {
+                try { rec.stop(); } catch (_) {}
             }
-
-            input.addEventListener("change", function () {
-                if (programmatic) return;
-                if (input.checked) {
-                    programmatic = true;
-                    input.checked = false;
-                    programmatic = false;
-                    syncNotice();
-                    openConfirmOrFallback();
-                } else {
-                    syncNotice();
-                }
-            });
-
-            if (btnConfirm) {
-                btnConfirm.addEventListener("click", function () {
-                    programmatic = true;
-                    input.checked = true;
-                    programmatic = false;
-                    syncNotice();
-                    if (dialog && dialog.open) dialog.close();
-                });
-            }
-
-            if (btnCancel) {
-                btnCancel.addEventListener("click", function () {
-                    programmatic = true;
-                    input.checked = false;
-                    programmatic = false;
-                    syncNotice();
-                    if (dialog && dialog.open) dialog.close();
-                });
-            }
-
-            if (dialog) {
-                dialog.addEventListener("cancel", function (e) {
-                    e.preventDefault();
-                    programmatic = true;
-                    input.checked = false;
-                    programmatic = false;
-                    syncNotice();
-                    dialog.close();
-                });
-            }
-        })();
-    </script>
-</body>
-</html>
+        });
+    }
+})();
+</script>
+{% endblock %}

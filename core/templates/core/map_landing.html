@@ -1,450 +1,459 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service Delivery - Landing</title>
-    <style>
-        :root {
-            --bg: #f5f7fb;
-            --text: #1f2937;
-            --accent: #0b4f6c;
-            --card: #ffffff;
-            --muted: #cbd5e1;
-            --button: #0b5ed7;
-            --button-hover: #0a53be;
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}{{ L.meta_title_home }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+    .map-page {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .map-hero {
+        max-width: 1100px;
+        margin: 0 auto 1rem;
+        padding: 0 0.25rem;
+    }
+
+    .map-hero h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.35rem;
+        color: var(--forest-2);
+    }
+
+    .map-hero p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        max-width: 72ch;
+    }
+
+    .map-shell {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: var(--card);
+        border-radius: 16px;
+        padding: 0.75rem;
+        box-shadow: 0 10px 35px rgba(15, 61, 46, 0.12);
+    }
+
+    #map-embed {
+        height: min(62vh, 560px);
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        z-index: 1;
+    }
+
+    .leaflet-div-icon {
+        background: transparent;
+        border: none;
+    }
+
+    /* Accessible pins: letter + shape + colour */
+    .pin {
+        width: 26px;
+        height: 26px;
+        display: grid;
+        place-items: center;
+        font-size: 0.68rem;
+        font-weight: 800;
+        color: #fff;
+        text-shadow: 0 0 2px rgba(0, 0, 0, 0.55);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+        border: 2px solid #0f172a;
+    }
+
+    .pin-pothole {
+        border-radius: 4px;
+        transform: rotate(45deg);
+        background: #ef4444;
+    }
+    .pin-pothole .pin-label { transform: rotate(-45deg); }
+
+    .pin-electricity {
+        border-radius: 50%;
+        border-style: dashed;
+        background: #eab308;
+    }
+
+    .pin-water {
+        border-radius: 0;
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        background: #3b82f6;
+    }
+
+    .pin-traffic {
+        border-radius: 4px;
+        border-style: double;
+        border-width: 3px;
+        background: #22c55e;
+    }
+
+    .pin-streetlight {
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        background: #f97316;
+    }
+    .pin-streetlight .pin-label { transform: rotate(45deg); }
+
+    .pin-you {
+        border-radius: 50%;
+        background: #2563eb;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #0f172a, 0 0 0 6px rgba(37, 99, 235, 0.25);
+        cursor: grab;
+    }
+    .pin-you:active { cursor: grabbing; }
+
+    .pin-label { line-height: 1; pointer-events: none; }
+
+    .map-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        margin-top: 0.85rem;
+        align-items: center;
+    }
+
+    .map-actions a {
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.05rem 1.55rem;
+        border-radius: 14px;
+        background: var(--gold);
+        color: #0f172a;
+        font-weight: 800;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 1.1rem;
+    }
+
+    .btn-primary:hover { background: var(--gold-hover); color: #fff; }
+
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.95rem 1.25rem;
+        border-radius: 14px;
+        background: #fff;
+        color: var(--forest-2);
+        font-weight: 700;
+        border: 2px solid var(--forest-2);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 1.02rem;
+    }
+
+    @media (max-width: 520px) {
+        .map-actions { flex-direction: column; align-items: stretch; }
+        .btn-primary, .btn-secondary { width: 100%; }
+    }
+
+    .btn-secondary:hover { background: #ecfdf5; }
+
+    .btn-forest {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.95rem 1.25rem;
+        border-radius: 14px;
+        background: var(--forest-2);
+        color: #fff !important;
+        font-weight: 800;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 1.02rem;
+        text-decoration: none;
+    }
+
+    .btn-forest:hover { background: var(--forest); }
+
+    /* Subtle pulse to draw attention to setting location */
+    .pin-you.is-pulsing {
+        animation: cmsaPulse 1.25s ease-in-out infinite;
+    }
+
+    @keyframes cmsaPulse {
+        0% { box-shadow: 0 0 0 2px #0f172a, 0 0 0 6px rgba(37, 99, 235, 0.18); transform: scale(1); }
+        50% { box-shadow: 0 0 0 2px #0f172a, 0 0 0 10px rgba(37, 99, 235, 0.30); transform: scale(1.04); }
+        100% { box-shadow: 0 0 0 2px #0f172a, 0 0 0 6px rgba(37, 99, 235, 0.18); transform: scale(1); }
+    }
+
+    #confirm-loc-dialog {
+        max-width: 520px;
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        padding: 0;
+        box-shadow: 0 16px 50px rgba(0, 0, 0, 0.25);
+    }
+
+    #confirm-loc-dialog::backdrop { background: rgba(15, 23, 42, 0.45); }
+
+    .confirm-inner { padding: 1.1rem 1.25rem; }
+    .confirm-inner h2 { margin: 0 0 0.5rem; color: var(--forest-2); font-size: 1.15rem; }
+    .confirm-inner p { margin: 0 0 0.65rem; color: #334155; line-height: 1.5; }
+    .confirm-actions { display:flex; gap:0.55rem; justify-content:flex-end; flex-wrap:wrap; margin-top:0.75rem; }
+    .confirm-actions button { border-radius: 12px; padding: 0.75rem 1.05rem; font-weight: 800; cursor:pointer; border:1px solid #cbd5e1; background:#fff; font-family:inherit; }
+    .confirm-actions button.primary { background: var(--gold); border-color: var(--gold); }
+    .confirm-actions button.primary:hover { background: var(--gold-hover); color:#fff; }
+
+    .legend {
+        margin-top: 0.65rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 0.35rem;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: #f8fafc;
+        border: 1px solid #dbe2ea;
+        border-radius: 10px;
+        padding: 0.3rem 0.5rem;
+        font-size: 0.78rem;
+    }
+
+    .legend-sample {
+        flex-shrink: 0;
+        width: 22px;
+        height: 22px;
+        display: grid;
+        place-items: center;
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: #fff;
+        text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+        border: 2px solid #0f172a;
+    }
+
+    .legend-sample.legend-pothole {
+        border-radius: 4px;
+        transform: rotate(45deg);
+        background: #ef4444;
+    }
+    .legend-sample.legend-pothole span { transform: rotate(-45deg); display: block; }
+
+    .legend-sample.legend-electricity {
+        border-radius: 50%;
+        border-style: dashed;
+        background: #eab308;
+    }
+
+    .legend-sample.legend-water {
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        background: #3b82f6;
+    }
+
+    .legend-sample.legend-traffic {
+        border-radius: 4px;
+        border-style: double;
+        border-width: 3px;
+        background: #22c55e;
+    }
+
+    .legend-sample.legend-streetlight {
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        background: #f97316;
+    }
+    .legend-sample.legend-streetlight span { transform: rotate(45deg); display: block; }
+
+    .legend-sample.legend-current {
+        border-radius: 50%;
+        background: #2563eb;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #0f172a;
+        font-size: 0.55rem;
+    }
+
+    .legend-key { font-weight: 800; color: #0f172a; }
+
+    .map-tip {
+        margin-top: 0.45rem;
+        font-size: 0.82rem;
+        color: var(--muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="map-page">
+<div class="map-hero">
+    <h1>{{ L.map_title }}</h1>
+    <p>{{ L.map_sub }}</p>
+</div>
+
+<div class="map-shell" aria-label="{{ L.map_title }}">
+    <div id="map-embed" role="application" aria-label="Interactive map"></div>
+    <div class="map-actions">
+        <button type="button" id="gps-locate" class="btn-forest">📍 Set my location</button>
+        <a id="report-cta" class="btn-primary" href="{% url 'report_fault' %}">{{ L.map_report_cta }}</a>
+        <a class="btn-secondary" href="{% url 'track_fault' %}">{{ L.map_track_cta }}</a>
+    </div>
+    <p class="map-tip"><strong>Step 1:</strong> Set your location. <strong>Step 2:</strong> Report the fault.</p>
+    <div class="legend" aria-label="{{ L.map_legend_heading }}">
+        <div class="legend-item"><span class="legend-sample legend-pothole" aria-hidden="true"><span>P</span></span> <span><span class="legend-key">P</span> — {{ L.issue_pothole }}</span></div>
+        <div class="legend-item"><span class="legend-sample legend-electricity" aria-hidden="true">E</span> <span><span class="legend-key">E</span> — {{ L.issue_electricity }}</span></div>
+        <div class="legend-item"><span class="legend-sample legend-water" aria-hidden="true">W</span> <span><span class="legend-key">W</span> — {{ L.issue_water }}</span></div>
+        <div class="legend-item"><span class="legend-sample legend-traffic" aria-hidden="true">T</span> <span><span class="legend-key">T</span> — {{ L.issue_traffic }}</span></div>
+        <div class="legend-item"><span class="legend-sample legend-streetlight" aria-hidden="true"><span>S</span></span> <span><span class="legend-key">S</span> — {{ L.issue_streetlight }}</span></div>
+        <div class="legend-item"><span class="legend-sample legend-current" aria-hidden="true">Y</span> <span><span class="legend-key">Y</span> — {{ L.map_you }}</span></div>
+    </div>
+</div>
+
+<div id="map-status" class="live-region" role="status" aria-live="polite"></div>
+
+<dialog id="confirm-loc-dialog" aria-labelledby="confirm-loc-title" aria-modal="true">
+    <div class="confirm-inner">
+        <h2 id="confirm-loc-title">Confirm your location</h2>
+        <p>Your report will use the current blue marker position. Drag it to the correct spot, or use <strong>Set my location</strong>.</p>
+        <div class="confirm-actions">
+            <button type="button" id="confirm-loc-cancel">Not yet</button>
+            <button type="button" class="primary" id="confirm-loc-continue">Continue to report</button>
+        </div>
+    </div>
+</dialog>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(function () {
+    const center = {{ map_center_json|safe }};
+    const incidents = {{ map_incidents_json|safe }};
+    const map = L.map("map-embed", { zoomControl: true, scrollWheelZoom: true });
+    // Use CARTO tiles (more reliable for demos than the volunteer OSM tile servers)
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        maxZoom: 19,
+        subdomains: "abcd",
+        attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+    }).addTo(map);
+    map.setView([center.lat, center.lng], center.zoom);
+
+    function pinHtml(code, cls) {
+        return '<div class="pin ' + cls + '" title=""><span class="pin-label">' + code + "</span></div>";
+    }
+
+    incidents.forEach(function (inc) {
+        const icon = L.divIcon({
+            html: pinHtml(inc.code, inc.cls),
+            className: "",
+            iconSize: [26, 26],
+            iconAnchor: [13, 13],
+        });
+        const marker = L.marker([inc.lat, inc.lng], { icon: icon, title: inc.title });
+        marker.bindPopup("<strong>" + inc.title + "</strong><br>Code: " + inc.code);
+        marker.addTo(map);
+    });
+
+    const youIcon = L.divIcon({
+        html: '<div class="pin pin-you" role="button" tabindex="0" aria-label="Your location, draggable"><span class="pin-label">Y</span></div>',
+        className: "",
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+    });
+    const you = L.marker([center.lat, center.lng], { draggable: true, icon: youIcon, title: "Your location" }).addTo(map);
+    you.bindPopup("Drag to set your location for reporting.");
+
+    const reportEl = document.getElementById("report-cta");
+    const statusEl = document.getElementById("map-status");
+
+    function announce(msg) {
+        if (statusEl) statusEl.textContent = msg;
+    }
+
+    function updateReportLink(lat, lng) {
+        const u = new URL(reportEl.getAttribute("href"), window.location.origin);
+        u.searchParams.set("lat", lat.toFixed(6));
+        u.searchParams.set("lng", lng.toFixed(6));
+        reportEl.setAttribute("href", u.pathname + u.search + u.hash);
+        announce("Location updated for your report: " + lat.toFixed(5) + ", " + lng.toFixed(5));
+    }
+
+    let locationConfirmed = false;
+    const gpsBtn = document.getElementById("gps-locate");
+    const confirmDialog = document.getElementById("confirm-loc-dialog");
+    const btnCancel = document.getElementById("confirm-loc-cancel");
+    const btnContinue = document.getElementById("confirm-loc-continue");
+
+    function setPulsing(on) {
+        // Leaflet divIcon root is injected after addTo; query within map container
+        const el = document.querySelector("#map-embed .pin-you");
+        if (el) el.classList.toggle("is-pulsing", !!on);
+    }
+
+    you.on("dragend", function (e) {
+        const p = e.target.getLatLng();
+        updateReportLink(p.lat, p.lng);
+        locationConfirmed = true;
+        setPulsing(false);
+    });
+
+    function useGPS() {
+        if (!navigator.geolocation) {
+            announce("GPS not available in this browser.");
+            return;
         }
+        if (gpsBtn) gpsBtn.disabled = true;
+        announce("Finding your location…");
+        navigator.geolocation.getCurrentPosition(
+            function (pos) {
+                if (gpsBtn) gpsBtn.disabled = false;
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                you.setLatLng([lat, lng]);
+                map.panTo([lat, lng]);
+                updateReportLink(lat, lng);
+                locationConfirmed = true;
+                setPulsing(false);
+            },
+            function () {
+                if (gpsBtn) gpsBtn.disabled = false;
+                announce("Could not get your GPS location. Drag the marker instead.");
+            },
+            { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
+        );
+    }
 
-        * {
-            box-sizing: border-box;
-            font-family: Arial, Helvetica, sans-serif;
+    if (gpsBtn) gpsBtn.addEventListener("click", useGPS);
+
+    // Intercept reporting until the user confirms their location intent
+    reportEl.addEventListener("click", function (e) {
+        if (locationConfirmed) return;
+        if (confirmDialog && typeof confirmDialog.showModal === "function") {
+            e.preventDefault();
+            confirmDialog.showModal();
         }
+    });
 
-        body {
-            margin: 0;
-            background: var(--bg);
-            color: var(--text);
-            height: 100vh;
-            overflow: hidden;
-        }
+    if (btnCancel) btnCancel.addEventListener("click", function () {
+        if (confirmDialog && confirmDialog.open) confirmDialog.close();
+    });
 
-        .container {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            max-width: 1050px;
-            margin: 0 auto;
-            padding: 0.7rem;
-            gap: 0.65rem;
-        }
+    if (btnContinue) btnContinue.addEventListener("click", function () {
+        locationConfirmed = true;
+        setPulsing(false);
+        if (confirmDialog && confirmDialog.open) confirmDialog.close();
+        window.location.href = reportEl.getAttribute("href");
+    });
 
-        header {
-            background: var(--card);
-            border-radius: 12px;
-            padding: 1rem 1.25rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-        }
-
-        .brand-wrap {
-            display: flex;
-            flex-direction: column;
-            gap: 0.65rem;
-        }
-
-        .brand-line {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .house-logo {
-            width: 34px;
-            height: 34px;
-            color: var(--accent);
-        }
-
-        .logo-text {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--accent);
-        }
-
-        .languages {
-            display: flex;
-            gap: 0.4rem;
-            flex-wrap: wrap;
-        }
-
-        .languages button {
-            border: 1px solid var(--muted);
-            border-radius: 999px;
-            background: #fff;
-            padding: 0.28rem 0.7rem;
-            cursor: pointer;
-            font-size: 0.86rem;
-        }
-
-        .top-links {
-            display: flex;
-            gap: 1rem;
-            margin-top: 0.35rem;
-        }
-
-        .top-links a {
-            color: var(--text);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .top-links a:hover,
-        .languages button:hover {
-            color: var(--accent);
-        }
-
-        .map-card {
-            background: var(--card);
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-            padding: 0.7rem;
-            flex: 1;
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .map-title {
-            margin: 0 0 0.5rem;
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #0f172a;
-        }
-
-        .map-area {
-            position: relative;
-            flex: 1;
-            min-height: 220px;
-            border-radius: 12px;
-            border: 1px solid #94a3b8;
-            overflow: hidden;
-            background:
-                linear-gradient(115deg, rgba(2, 132, 199, 0.1), rgba(56, 189, 248, 0.06)),
-                linear-gradient(25deg, rgba(20, 184, 166, 0.08), rgba(34, 197, 94, 0.05)),
-                #e2e8f0;
-        }
-
-        .map-roads {
-            position: absolute;
-            inset: 0;
-            background:
-                repeating-linear-gradient(35deg, rgba(100, 116, 139, 0.35) 0 2px, transparent 2px 48px),
-                repeating-linear-gradient(130deg, rgba(100, 116, 139, 0.22) 0 2px, transparent 2px 60px);
-            opacity: 0.45;
-            pointer-events: none;
-        }
-
-        .district-label {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background: rgba(255, 255, 255, 0.88);
-            border-radius: 8px;
-            padding: 0.35rem 0.5rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #334155;
-        }
-
-        /* Pins: colour + letter + shape/border so types work without relying on colour alone */
-        .pin {
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            display: grid;
-            place-items: center;
-            font-size: 0.65rem;
-            font-weight: 800;
-            color: #fff;
-            text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-            border: 2px solid #0f172a;
-        }
-
-        .pin-pothole {
-            border-radius: 4px;
-            transform: rotate(45deg);
-            background: #ef4444;
-        }
-
-        .pin-pothole .pin-label {
-            transform: rotate(-45deg);
-        }
-
-        .pin-electricity {
-            border-radius: 50%;
-            border-style: dashed;
-            background: #eab308;
-        }
-
-        .pin-water {
-            border-radius: 0;
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-            background: #3b82f6;
-        }
-
-        .pin-traffic {
-            border-radius: 4px;
-            border-style: double;
-            border-width: 3px;
-            background: #22c55e;
-        }
-
-        .pin-streetlight {
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
-            background: #f97316;
-        }
-
-        .pin-streetlight .pin-label {
-            transform: rotate(45deg);
-        }
-
-        .pin-label {
-            line-height: 1;
-            pointer-events: none;
-        }
-
-        #current-location-dot {
-            position: absolute;
-            top: 54%;
-            left: 52%;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: #2563eb;
-            border: 3px solid #ffffff;
-            box-shadow: 0 0 0 2px #0f172a, 0 0 0 5px rgba(37, 99, 235, 0.25);
-            cursor: grab;
-            touch-action: none;
-            display: grid;
-            place-items: center;
-            font-size: 0.55rem;
-            font-weight: 800;
-            color: #fff;
-        }
-
-        #current-location-dot:active {
-            cursor: grabbing;
-        }
-
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-
-        .legend {
-            margin-top: 0.45rem;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
-            gap: 0.3rem;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            background: #f8fafc;
-            border: 1px solid #dbe2ea;
-            border-radius: 10px;
-            padding: 0.25rem 0.45rem;
-            font-size: 0.76rem;
-        }
-
-        .legend-sample {
-            flex-shrink: 0;
-            width: 22px;
-            height: 22px;
-            display: grid;
-            place-items: center;
-            font-size: 0.65rem;
-            font-weight: 800;
-            color: #fff;
-            text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
-            border: 2px solid #0f172a;
-        }
-
-        .legend-sample.legend-pothole {
-            border-radius: 4px;
-            transform: rotate(45deg);
-            background: #ef4444;
-        }
-
-        .legend-sample.legend-pothole span {
-            transform: rotate(-45deg);
-            display: block;
-        }
-
-        .legend-sample.legend-electricity {
-            border-radius: 50%;
-            border-style: dashed;
-            background: #eab308;
-        }
-
-        .legend-sample.legend-water {
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-            background: #3b82f6;
-        }
-
-        .legend-sample.legend-traffic {
-            border-radius: 4px;
-            border-style: double;
-            border-width: 3px;
-            background: #22c55e;
-        }
-
-        .legend-sample.legend-streetlight {
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
-            background: #f97316;
-        }
-
-        .legend-sample.legend-streetlight span {
-            transform: rotate(45deg);
-            display: block;
-        }
-
-        .legend-sample.legend-current {
-            border-radius: 50%;
-            background: #2563eb;
-            border: 3px solid #fff;
-            box-shadow: 0 0 0 2px #0f172a;
-            font-size: 0.5rem;
-        }
-
-        .legend-key {
-            font-weight: 700;
-            color: #0f172a;
-        }
-
-        .map-note {
-            margin-top: 0.3rem;
-            font-size: 0.76rem;
-            color: #475569;
-        }
-
-        .report-button {
-            display: block;
-            width: 100%;
-            text-align: center;
-            text-decoration: none;
-            background: var(--button);
-            color: #fff;
-            font-weight: 700;
-            font-size: 1rem;
-            padding: 0.78rem;
-            border-radius: 12px;
-            transition: background 0.2s ease;
-        }
-
-        .report-button:hover {
-            background: var(--button-hover);
-        }
-    </style>
-</head>
-<body>
-    <main class="container">
-        <header>
-            <div class="brand-wrap">
-                <div class="brand-line">
-                    <svg class="house-logo" viewBox="0 0 24 24" fill="none" aria-label="House logo">
-                        <path d="M3 10.8L12 3l9 7.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M5.5 9.8V20h13V9.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M10 20v-5.5h4V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <div class="logo-text">Digital Service Delivery Concierge</div>
-                </div>
-                <div class="languages" aria-label="Language toggle">
-                    <button type="button">English</button>
-                    <button type="button">Zulu</button>
-                    <button type="button">Afrikaans</button>
-                </div>
-            </div>
-            <div class="top-links">
-                <a href="#">About Us</a>
-                <a href="#">Contact Us</a>
-            </div>
-        </header>
-
-        <section class="map-card" aria-label="Kimberley map mock">
-            <h2 class="map-title">Kimberley Map (Mock Incidents)</h2>
-            <p class="map-note" style="margin: 0 0 0.4rem;">Each incident uses a <strong>letter code</strong> and a <strong>distinct shape</strong>, not colour alone—so the map stays usable if you see colours differently.</p>
-            <div id="map-area" class="map-area" role="img" aria-label="Mock map of Kimberley with labelled incident markers P, E, W, T, S and your location">
-                <div class="map-roads"></div>
-                <div class="district-label">Kimberley CBD</div>
-
-                <span class="pin pin-pothole" style="top: 22%; left: 17%;" title="Pothole — marker P, square rotated"><span class="pin-label">P</span><span class="sr-only">Pothole</span></span>
-                <span class="pin pin-electricity" style="top: 34%; left: 37%;" title="Electricity — marker E, circle dashed border"><span class="pin-label">E</span><span class="sr-only">Electricity</span></span>
-                <span class="pin pin-water" style="top: 50%; left: 66%;" title="Water — marker W, diamond shape"><span class="pin-label">W</span><span class="sr-only">Water</span></span>
-                <span class="pin pin-traffic" style="top: 68%; left: 22%;" title="Traffic — marker T, square double border"><span class="pin-label">T</span><span class="sr-only">Traffic</span></span>
-                <span class="pin pin-streetlight" style="top: 43%; left: 82%;" title="Streetlight — marker S, teardrop"><span class="pin-label">S</span><span class="sr-only">Streetlight</span></span>
-                <span class="pin pin-pothole" style="top: 79%; left: 58%;" title="Pothole — marker P"><span class="pin-label">P</span><span class="sr-only">Pothole</span></span>
-                <span class="pin pin-electricity" style="top: 27%; left: 74%;" title="Electricity — marker E"><span class="pin-label">E</span><span class="sr-only">Electricity</span></span>
-
-                <span id="current-location-dot" title="Your location — letter Y, solid circle, drag to move" role="button" tabindex="0" aria-label="Your current location, draggable">Y</span>
-            </div>
-
-            <div class="legend" aria-label="Map key: letter, shape, and colour">
-                <div class="legend-item"><span class="legend-sample legend-pothole" aria-hidden="true"><span>P</span></span> <span><span class="legend-key">P</span> — Pothole (square, red)</span></div>
-                <div class="legend-item"><span class="legend-sample legend-electricity" aria-hidden="true">E</span> <span><span class="legend-key">E</span> — Electricity (circle, dashed, yellow)</span></div>
-                <div class="legend-item"><span class="legend-sample legend-water" aria-hidden="true">W</span> <span><span class="legend-key">W</span> — Water (diamond, blue)</span></div>
-                <div class="legend-item"><span class="legend-sample legend-traffic" aria-hidden="true">T</span> <span><span class="legend-key">T</span> — Traffic (square, double border, green)</span></div>
-                <div class="legend-item"><span class="legend-sample legend-streetlight" aria-hidden="true"><span>S</span></span> <span><span class="legend-key">S</span> — Streetlight (teardrop, orange)</span></div>
-                <div class="legend-item"><span class="legend-sample legend-current" aria-hidden="true">Y</span> <span><span class="legend-key">Y</span> — You (solid circle, blue)</span></div>
-            </div>
-            <p class="map-note">Tip: drag the <strong>Y</strong> dot to simulate your location.</p>
-        </section>
-
-        <a class="report-button" href="{% url 'report_fault' %}">Report a Fault</a>
-    </main>
-    <script>
-        (function () {
-            const dot = document.getElementById("current-location-dot");
-            const map = document.getElementById("map-area");
-            let dragging = false;
-
-            const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-
-            function moveDot(clientX, clientY) {
-                const rect = map.getBoundingClientRect();
-                const x = clamp(clientX - rect.left, 8, rect.width - 8);
-                const y = clamp(clientY - rect.top, 8, rect.height - 8);
-                dot.style.left = `${(x / rect.width) * 100}%`;
-                dot.style.top = `${(y / rect.height) * 100}%`;
-            }
-
-            dot.addEventListener("pointerdown", (event) => {
-                dragging = true;
-                dot.setPointerCapture(event.pointerId);
-            });
-
-            dot.addEventListener("pointermove", (event) => {
-                if (!dragging) return;
-                moveDot(event.clientX, event.clientY);
-            });
-
-            dot.addEventListener("pointerup", () => {
-                dragging = false;
-            });
-        })();
-    </script>
-</body>
-</html>
+    updateReportLink(center.lat, center.lng);
+    // Start with a pulse to show the most important interaction
+    setTimeout(function () { setPulsing(true); }, 450);
+})();
+</script>
+{% endblock %}
